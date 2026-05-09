@@ -212,13 +212,14 @@
       showPage();
     }
 
-    // 페이지 보여주기
+      // 페이지 보여주기
     function showPage() {
       const page = currentStory.pages[currentPage];
       document.getElementById('pageEmoji').textContent = page.emoji;
       document.getElementById('pageText').textContent = page.text;
       document.getElementById('pageInfo').textContent =
         `${currentPage + 1} / ${currentStory.pages.length} 쪽`;
+      readAloud(); // 자동으로 읽어주기!
     }
 
     // 다음 페이지
