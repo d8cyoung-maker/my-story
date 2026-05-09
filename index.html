@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>동화나라 📚</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    h1 {
+      text-align: center;
+      color: #d63031;
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+
+    /* 동화 선택 화면 */
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .story-card {
+      background: #fff5e1;
+      border: 3px solid #ffeaa7;
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .story-card:hover {
+      transform: translateY(-4px);
+      border-color: #fab1a0;
+    }
+    .story-emoji { font-size: 60px; margin-bottom: 10px; }
+    .story-title { font-size: 24px; font-weight: bold; color: #2d3436; }
+
+    /* 동화 읽기 화면 */
+    .reading { display: none; }
+    .reading.active { display: block; }
+    .page-emoji {
+      font-size: 120px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .page-text {
+      font-size: 22px;
+      line-height: 1.8;
+      color: #2d3436;
+      text-align: center;
+      padding: 20px;
+      background: #fff9e6;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      min-height: 120px;
+    }
+    .page-info {
+      text-align: center;
+      color: #888;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 14px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-prev { background: #dfe6e9; color: #2d3436; }
+    .btn-next { background: #74b9ff; color: white; }
+    .btn-read { background: #fd79a8; color: white; }
+    .btn-home { background: #55efc4; color: #2d3436; }
+
+    /* 다 읽음 화면 */
+    .done { display: none; text-align: center; }
+    .done.active { display: block; }
+    .done-emoji { font-size: 100px; margin: 20px 0; }
+    .done-text { font-size: 28px; color: #d63031; font-weight: bold; margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 메인 화면 -->
+    <div id="mainScreen">
+      <h1>📚 동화나라</h1>
+      <p class="subtitle">어떤 이야기를 들려드릴까요?</p>
+      <div class="story-grid" id="storyGrid"></div>
+    </div>
+
+    <!-- 동화 읽기 화면 -->
+    <div id="readingScreen" class="reading">
+      <h1 id="storyTitle"></h1>
+      <p class="page-info" id="pageInfo"></p>
+      <div class="page-emoji" id="pageEmoji"></div>
+      <div class="page-text" id="pageText"></div>
+      <div class="controls">
+        <button class="btn-read" onclick="readAloud()">🔊 읽어주기</button>
+        <button class="btn-prev" onclick="prevPage()">⬅️ 이전</button>
+        <button class="btn-next" onclick="nextPage()">다음 ➡️</button>
+        <button class="btn-home" onclick="goHome()">🏠 처음으로</button>
+      </div>
+    </div>
+
+    <!-- 다 읽음 화면 -->
+    <div id="doneScreen" class="done">
+      <div class="done-emoji">🎉</div>
+      <div class="done-text">다 읽었어요! 잘했어요!</div>
+      <button class="btn-home" onclick="goHome()">🏠 다른 동화 보기</button>
+    </div>
+  </div>
+
+  <script>
+    // 동화 데이터
+    const stories = [
+      {
+        title: "토끼와 거북이",
+        emoji: "🐰",
+        pages: [
+          { emoji: "🐰🐢", text: "옛날 옛적에, 빠른 토끼와 느린 거북이가 살았어요." },
+          { emoji: "💪", text: "토끼는 거북이에게 달리기 시합을 하자고 했어요." },
+          { emoji: "🏃‍♂️💨", text: "시합이 시작되자 토끼는 쌩쌩 달려나갔어요." },
+          { emoji: "😴🌳", text: "토끼는 너무 앞섰다고 생각해서 나무 아래에서 잠이 들었어요." },
+          { emoji: "🐢➡️", text: "거북이는 느리지만 쉬지 않고 한 걸음씩 나아갔어요." },
+          { emoji: "🏆🐢", text: "결국 거북이가 먼저 결승점에 도착했답니다!" },
+          { emoji: "✨", text: "꾸준히 노력하는 것이 가장 중요해요." }
+        ]
+      },
+      {
+        title: "여우와 포도",
+        emoji: "🦊",
+        pages: [
+          { emoji: "🦊", text: "배고픈 여우 한 마리가 숲을 걷고 있었어요." },
+          { emoji: "🍇", text: "높은 나무 위에 잘 익은 포도가 주렁주렁 매달려 있었어요." },
+          { emoji: "🤸", text: "여우는 폴짝폴짝 뛰어 보았지만 포도에 닿지 않았어요." },
+          { emoji: "😤", text: "아무리 애써도 포도를 딸 수 없자 여우는 포기했어요." },
+          { emoji: "🦊💭", text: "\"저 포도는 분명 시고 맛없을 거야!\" 여우가 중얼거렸어요." },
+          { emoji: "💡", text: "갖지 못하는 것을 싫다고 말하는 사람이 많아요." }
+        ]
+      },
+      {
+        title: "개미와 베짱이",
+        emoji: "🐜",
+        pages: [
+          { emoji: "☀️🐜", text: "더운 여름, 개미는 열심히 식량을 모았어요." },
+          { emoji: "🎵🦗", text: "베짱이는 노래만 부르며 신나게 놀았어요." },
+          { emoji: "🐜💪", text: "\"같이 준비하자!\" 개미가 말했지만 베짱이는 듣지 않았어요." },
+          { emoji: "❄️", text: "겨울이 왔어요. 온 세상이 하얗게 눈으로 덮였어요." },
+          { emoji: "🦗😢", text: "베짱이는 먹을 것이 없어 추위에 떨었어요." },
+          { emoji: "🐜🏠", text: "개미는 따뜻한 집에서 모아둔 식량으로 겨울을 잘 보냈어요." },
+          { emoji: "✨", text: "미리미리 준비하는 습관이 우리를 지켜줘요." }
+        ]
+      }
+    ];
+
+    let currentStory = null;
+    let currentPage = 0;
+
+    // 메인 화면 그리기
+    function renderMain() {
+      const grid = document.getElementById('storyGrid');
+      grid.innerHTML = '';
+      stories.forEach((story, index) => {
+        const card = document.createElement('div');
+        card.className = 'story-card';
+        card.onclick = () => openStory(index);
+        card.innerHTML = `
+          <div class="story-emoji">${story.emoji}</div>
+          <div class="story-title">${story.title}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 동화 열기
+    function openStory(index) {
+      currentStory = stories[index];
+      currentPage = 0;
+      document.getElementById('mainScreen').style.display = 'none';
+      document.getElementById('readingScreen').classList.add('active');
+      document.getElementById('doneScreen').classList.remove('active');
+      document.getElementById('storyTitle').textContent = currentStory.title;
+      showPage();
+    }
+
+    // 페이지 보여주기
+    function showPage() {
+      const page = currentStory.pages[currentPage];
+      document.getElementById('pageEmoji').textContent = page.emoji;
+      document.getElementById('pageText').textContent = page.text;
+      document.getElementById('pageInfo').textContent =
+        `${currentPage + 1} / ${currentStory.pages.length} 쪽`;
+    }
+
+    // 다음 페이지
+    function nextPage() {
+      window.speechSynthesis.cancel(); // 읽기 멈춤
+      if (currentPage < currentStory.pages.length - 1) {
+        currentPage++;
+        showPage();
+      } else {
+        // 다 읽음
+        document.getElementById('readingScreen').classList.remove('active');
+        document.getElementById('doneScreen').classList.add('active');
+      }
+    }
+
+    // 이전 페이지
+    function prevPage() {
+      window.speechSynthesis.cancel();
+      if (currentPage > 0) {
+        currentPage--;
+        showPage();
+      }
+    }
+
+    // 처음으로
+    function goHome() {
+      window.speechSynthesis.cancel();
+      document.getElementById('readingScreen').classList.remove('active');
+      document.getElementById('doneScreen').classList.remove('active');
+      document.getElementById('mainScreen').style.display = 'block';
+    }
+
+    // 읽어주기 (브라우저 음성 기능)
+    function readAloud() {
+      window.speechSynthesis.cancel();
+      const text = currentStory.pages[currentPage].text;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ko-KR';
+      utter.rate = 0.9; // 속도 (어린이용으로 천천히)
+      window.speechSynthesis.speak(utter);
+    }
+
+    // 시작
+    renderMain();
+  </script>
+</body>
+</html>
